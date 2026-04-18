@@ -1,4 +1,5 @@
 package user.code;
+
 public class Admin extends User {
     private int accessLevel1;
 
@@ -41,9 +42,9 @@ public class Admin extends User {
     }
 
 // Xóa những phiên giao dịch không hợp lệ
-    public void removeInpropriateAuction (Auction  auction ) {
-        System.out.println("Sản phẩm: " + auction.getItem().getItemName() + " đã bị admin" + this.getFullname() + " xóa do không họp lệ");
-        auction.setStatus("CANCELED BY ADMIN");
+    public void removeInpropriateAuction (Auction Bid ) {
+        System.out.println("Sản phẩm: " + Bid.getItem().getItemName() + " đã bị admin" + this.getFullname() + " xóa do không họp lệ");
+        Bid.setStatus("CANCELED BY ADMIN");
     }
 
 // hiển thị thông tin của đối tượng admin
