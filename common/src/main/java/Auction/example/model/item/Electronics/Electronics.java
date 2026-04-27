@@ -1,6 +1,7 @@
-package Auction.example.model.item;
+package Auction.example.model.item.Electronics;
 
 import Auction.example.enums.ItemCondition;
+import Auction.example.model.item.items.Item;
 
 public class Electronics extends Item {
     private int warrantyPeriod;

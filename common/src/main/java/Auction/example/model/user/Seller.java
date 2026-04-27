@@ -1,5 +1,8 @@
 package Auction.example.model.user;
 
+import Auction.example.model.auction.Auction;
+import Auction.example.model.item.items.Item;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +30,7 @@ public class Seller extends User {
         }
         // trường hợp  món hàng hợp lệ thì thêm vào danh sách.
         ownedItems.add(newItem);
-        System.out.println("Thêm thành công: " + newItem.getItemName());
+        System.out.println("Thêm thành công: " + newItem.getName());
     }
 
     public void manageAuction(Auction auction) {
