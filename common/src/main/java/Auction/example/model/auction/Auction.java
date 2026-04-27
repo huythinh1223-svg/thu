@@ -80,4 +80,13 @@ public class Auction {
     public String getHighestBidderId() {
         return highestBidderId;
     }
+
+
+// getter
+    public String getAuctionId() {return auctionId;}
+    public String getProductName() {return productName;}
+    public String getSellerId() {return sellerId;}
+    public double getStartingPrice() {return startingPrice;}
+    public LocalDateTime getStartTime() {return startTime;}
+    public LocalDateTime getEndTime() {return endTime;}
 }

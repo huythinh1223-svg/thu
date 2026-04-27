@@ -1,13 +1,13 @@
-package Auction.example.model.item;
+package Auction.example.model.item.items;
 
 import Auction.example.enums.ItemCondition;
 
 public abstract class Item {
     protected String id;
     protected String name;
-    protected String description;
+    protected String description; // mô tả
     protected double startingPrice;
-    protected ItemCondition condition;
+    protected ItemCondition condition; // loại sản phẩm
 
     public Item(String id, String name, String description, double startingPrice, ItemCondition condition) {
         this.id = id;
@@ -18,9 +18,7 @@ public abstract class Item {
     }
 
 // getter
-    public String getId() {
-        return id;
-    }
+    public String getId() {return id;}
     public String getName() {
         return name;
     }
@@ -32,13 +30,15 @@ public abstract class Item {
     }
 
 
-
+// tạo giá khởi điểm
     public void setStartingPrice(double startingPrice) {
         this.startingPrice = startingPrice;
     }
 
+// hiển thị thông tin sản phẩm
     public abstract String getDisplayInfo();
 
+// kiểm tra tính hợp lệ của sản phẩm
     public abstract boolean validateItem();
 
 }

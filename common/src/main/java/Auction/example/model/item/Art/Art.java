@@ -1,6 +1,7 @@
-package Auction.example.model.item;
+package Auction.example.model.item.Art;
 
 import Auction.example.enums.ItemCondition;
+import Auction.example.model.item.items.Item;
 
 public class Art extends Item {
     private String artistName;
