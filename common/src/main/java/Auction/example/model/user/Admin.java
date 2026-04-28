@@ -1,5 +1,5 @@
-package Auction.example.model.user;
-public class Admin extends  User {
+package user.code;
+public class Admin extends User {
     private int accessLevel1;
 
     public Admin(String id, String username, String passworld, String fullname, String email, int accessLevel1) {
