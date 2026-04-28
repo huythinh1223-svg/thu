@@ -1,22 +1,17 @@
-package Auction.example.exception;
+package Auction.example.enums;
+public enum InvalidBidError {
+    PRICE_TOO_LOW("Giá đặt phải cao hơn mức giá hiện tại"),
+    PRICE_BELOW_STARTING("Giá đặt không được thấp hơn giá khởi điểm"),
+    BIDDER_IS_SELLER("Người bán không thể tự đặt giá cho sản phẩm của mình"),
+    INVALID_INCREMENT("Bước giá không hợp lệ"); 
 
-import Auction.example.enums.InvalidBidError;
+    private final String description;
 
-public class InvalidBidException extends Exception {
-
-    private final InvalidBidError errorCode;
-
-    public InvalidBidException(InvalidBidError errorCode) {
-        super(errorCode.getDescription());
-        this.errorCode = errorCode;
+    InvalidBidError(String description) {
+        this.description = description;
     }
 
-    public InvalidBidException(InvalidBidError errorCode, String additionalDetail) {
-        super(errorCode.getDescription() + " - " + additionalDetail);
-        this.errorCode = errorCode;
-    }
-
-    public InvalidBidError getErrorCode() {
-        return errorCode;
+    public String getDescription() {
+        return this.description;
     }
 }
