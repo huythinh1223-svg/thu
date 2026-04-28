@@ -22,7 +22,5 @@ public class BidHistory {
 
     public int getTotalBids() {
         return bids.size();
-    }
-    
-    // Bạn có thể thêm các hàm xử lý thống kê ở đây sau này (VD: vẽ biểu đồ)
+    }    
 }
