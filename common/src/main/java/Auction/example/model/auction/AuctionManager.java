@@ -1,4 +1,4 @@
-package user.code.server.src.main.java.Auction.example;
+package user.code.common.src.main.java.Auction.example.model.auction;
 
 import java.util.Collection;
 import java.util.Collections;

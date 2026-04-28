@@ -1,114 +1,144 @@
-package Auction.example.model.auction;
+package user.code.common.src.main.java.Auction.example.model.auction;
 
-import Auction.example.enums.AuctionState;
+import Auction.example.model.item.items.Item;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import Auction.example.exception.InvalidBidException;
+import
+import user.code.common.src.main.java.Auction.example.exception.CloseAuctionException;
 
 public class Auction {
-    private final String auctionId;
-    private final String productName;
-    private final String sellerId;
 
-    private final double startingPrice;
+    public enum State {
+        OPEN, // moi tao phien dau gia
+        RUNNING, // phien dau gia dang dien ra
+        FINISHED, // phien dau gia ket thuc
+        PAID,
+        CANCELED
+    }
+
+    private String currentAuctionId;
+    private State state;
+
+    private String sellerId;
+    private String highestBidderId;
+    private String winnerId;
+
+    private Item autionItem;
+    private double startPrice;
     private double currentPrice;
-    private Bidder highestBidder;
 
-    private final LocalDateTime startTime;
-    private final LocalDateTime endTime;
+    private List<Bid> bidHistory;
 
-    private AuctionState state;
-    private final List<Bid> bidHistory = new ArrayList<>();
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+    private long duration; // tinh theo minutes
 
-    public Auction(String auctionId, String productName, String sellerId,
-                   double startingPrice, LocalDateTime startTime, LocalDateTime endTime) {
-        this.auctionId = auctionId;
-        this.productName = productName;
+    private double minIncrementalPrice;
+
+    private transient ScheduledExecutorService executor;
+    private transient ScheduledFuture<?> future; // nhiem vu tu dong close auction trong tuong lai
+
+    public Auction(String currentAuctionId, String sellerId, double startPrice, long duration,
+                   double minIncrementalPrice) {
+        this.currentAuctionId = currentAuctionId;
+        this.state = State.OPEN;
         this.sellerId = sellerId;
-        this.startingPrice = startingPrice;
-        this.currentPrice = startingPrice;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.state = AuctionState.OPEN;
+        this.startPrice = startPrice;
+        this.currentPrice = startPrice;
+        this.minIncrementalPrice = minIncrementalPrice;
+        this.executor = Executors.newSingleThreadScheduledExecutor();
+        this.duration = duration;
     }
 
-    // Cập nhật trạng thái dựa theo thời gian hiện tại
-    private synchronized void updateState() {
-        LocalDateTime now = LocalDateTime.now();
-        if (state == AuctionState.OPEN && !now.isBefore(startTime)) {
-            state = AuctionState.RUNNING;
+    // Start the auction
+    public synchronized void start(){
+        if (this.state != State.OPEN) {
+            return;
         }
-        if (state == AuctionState.RUNNING && !now.isBefore(endTime)) {
-            state = AuctionState.FINISHED;
+
+        this.startTime = LocalDateTime.now();
+        this.endTime = startTime.plusMinutes(duration);
+
+         this.state = State.RUNNING;
+         autoCloseAuction();
+    }
+
+    public synchronized void cancel(String reason){
+        if (this.state != State.CANCELED || this.state == State.PAID) {
+            return;
+        }
+
+        state = State.CANCELED;
+    }
+
+    // Auto close the auction if khong ai bid them hoac het thoi gian
+    private void autoCloseAuction() {
+        long remainingMillis = Duration.between(LocalDateTime.now(), endTime).toMillis();
+
+        if (remainingMillis > 0) {
+            future = executor.schedule(this::finish, remainingMillis, TimeUnit.MILLISECONDS);
+        } else {
+            finish();
         }
     }
 
-    // Đặt giá — nhận Bidder object thay vì String để nhất quán với class Bid
-    public synchronized void placeBid(Bidder bidder, double bidAmount) throws Exception {
-        updateState();
-
-        if (state != AuctionState.RUNNING) {
-            throw new Exception("Auction is not running. Current state: " + state);
-        }
-        if (bidAmount <= currentPrice) {
-            throw new Exception(String.format(
-                    "Bid %.2f must be higher than current price %.2f", bidAmount, currentPrice));
+    //Ket thuc phien dau gia
+    public synchronized void finish(){
+        if (this.state == State.FINISHED || this.state == State.PAID ||  this.state == State.CANCELED) {
+            return;
         }
 
-        Bid bid = new Bid(bidder, bidAmount);
+        state = State.FINISHED;
+
+        if (highestBidderId != null){
+            winnerId = highestBidderId;
+        }
+    }
+
+    public synchronized void placeBid(String bidderId, double amount)
+            throws InvalidBidException, CloseAuctionException {
+        if (state != State.RUNNING) {
+            throw new CloseAuctionException("Auction is not running", currentAuctionId);
+        }
+
+        if (LocalDateTime.now().isAfter(endTime)) {
+            finish();
+            throw new CloseAuctionException("Auction is already ended", currentAuctionId);
+        }
+
+        //if (amount <= currentPrice) {
+            //throw new InvalidBidException("Bid must be higher than current price", currentPrice)
+        //}
+
+        if (amount < currentPrice + minIncrementalPrice) {
+
+        }
+
+        currentPrice = amount;
+        highestBidderId = bidderId;
+
+        Bid bid = new Bid(currentAuctionId, bidderId, amount);
         bidHistory.add(bid);
-        currentPrice = bidAmount;
-        highestBidder = bidder;
     }
 
-    public void markPaid() throws Exception {
-        if (state != AuctionState.FINISHED) {
-            throw new Exception("Auction must be FINISHED before payment. Current state: " + state);
+    public synchronized boolean processPayment(String WinnerId, double amount) {
+        if (!winnerId.equals(this.winnerId)) {
+            return false;
         }
-        state = AuctionState.PAID;
-    }
 
-    public void cancelAuction() {
-        if (state == AuctionState.PAID) {
-            throw new IllegalStateException("Cannot cancel an already paid auction");
+        if (Math.abs(amount - currentPrice) < 0.01) {
+            state = State.PAID;
+            return true;
         }
-        state = AuctionState.CANCELED;
-    }
-
-    // Getters
-    public String getAuctionId()        { return auctionId; }
-    public String getProductName()      { return productName; }
-    public String getSellerId()         { return sellerId; }
-    public double getStartingPrice()    { return startingPrice; }
-    public double getCurrentPrice()     { return currentPrice; }
-    public LocalDateTime getStartTime() { return startTime; }
-    public LocalDateTime getEndTime()   { return endTime; }
-    public Bidder getHighestBidder()    { return highestBidder; }
-
-    public AuctionState getState() {
-        updateState();
-        return state;
-    }
-
-    // Trả về bản copy để tránh bên ngoài modify trực tiếp list
-    public List<Bid> getBidHistory() {
-        return Collections.unmodifiableList(bidHistory);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Auction[id=%s, product=%s, price=%.2f, state=%s]",
-                auctionId, productName, currentPrice, getState());
+        return false;
     }
 
 
-// getter
-    public String getAuctionId() {return auctionId;}
-    public String getProductName() {return productName;}
-    public String getSellerId() {return sellerId;}
-    public double getStartingPrice() {return startingPrice;}
-    public LocalDateTime getStartTime() {return startTime;}
-    public LocalDateTime getEndTime() {return endTime;}
 }
