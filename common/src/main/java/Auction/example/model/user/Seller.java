@@ -1,6 +1,5 @@
 package Auction.example.model.user;
 
-import Auction.example.model.auction.Auction;
 import Auction.example.model.item.items.Item;
 
 import java.util.ArrayList;

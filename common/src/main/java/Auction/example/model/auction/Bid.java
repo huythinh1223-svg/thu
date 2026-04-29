@@ -1,42 +1,43 @@
-package Auction.example.model.auction;
+package user.code.common.src.main.java.Auction.example.model.auction;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-// update thêm Serializable cho mạng, Comparable cho sắp xếp
-public class Bid implements Serializable, Comparable<Bid> {
-    
+public class Bid implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private Bidder bidder;
+    private String auctionId;
+    private String bidderId;
     private double amount;
-    private LocalDateTime timestamp;
+    private LocalDateTime time;
 
-    public Bid(Bidder bidder, double amount) {
-        this.bidder = bidder;
+    public Bid(String auctionId, String bidderId, double amount) {
+        this.auctionId = auctionId;
+        this.bidderId = bidderId;
         this.amount = amount;
-        this.timestamp = LocalDateTime.now();
+        this.time = LocalDateTime.now(); // tự lấy thời điểm bid
     }
 
-    // Getters
-    public Bidder getBidder() { return bidder; }
-    public double getAmount() { return amount; }
-    public LocalDateTime getTimestamp() { return timestamp; }
+    // Getter
+    public String getAuctionId() {
+        return auctionId;
+    }
 
-    // Logic hỗ trợ sắp xếp giá thầu
-    @Override
-    public int compareTo(Bid other) {
-        int priceComparison = Double.compare(this.amount, other.amount);
-        if (priceComparison == 0) {
-            // Nếu giá bằng nhau, ai đặt trước (thời gian nhỏ hơn) xếp trên
-            return this.timestamp.compareTo(other.timestamp);
-        }
-        return priceComparison;
+    public String getBidderId() {
+        return bidderId;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public LocalDateTime getTime() {
+        return time;
     }
 
     @Override
     public String toString() {
-        return String.format("Bid[User: %s, Amount: %.2f, Time: %s]",
-                bidder.getUsername(), amount, timestamp);
+        return String.format("Bid[auction=%s, bidder=%s, amount=%.2f, time=%s]",
+                auctionId, bidderId, amount, time);
     }
 }
