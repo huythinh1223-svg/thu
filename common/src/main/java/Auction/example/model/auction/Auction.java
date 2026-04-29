@@ -1,4 +1,4 @@
-package user.code.common.src.main.java.Auction.example.model.auction;
+package Auction.example.model.auction;
 
 import Auction.example.model.item.items.Item;
 
@@ -10,7 +10,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import Auction.example.exception.InvalidBidException;
-import
 import user.code.common.src.main.java.Auction.example.exception.CloseAuctionException;
 
 public class Auction {
