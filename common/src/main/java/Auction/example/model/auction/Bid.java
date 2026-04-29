@@ -1,4 +1,4 @@
-package user.code.common.src.main.java.Auction.example.model.auction;
+package Auction.example.model.auction;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -6,10 +6,10 @@ import java.time.LocalDateTime;
 public class Bid implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String auctionId;
-    private String bidderId;
-    private double amount;
-    private LocalDateTime time;
+    private final String auctionId;
+    private final String bidderId;
+    private final double amount;
+    private final LocalDateTime time;
 
     public Bid(String auctionId, String bidderId, double amount) {
         this.auctionId = auctionId;
