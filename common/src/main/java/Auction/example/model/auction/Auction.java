@@ -60,6 +60,23 @@ public class Auction {
         this.bidHistory = new ArrayList<>();
     }
 
+    // Bổ sung các hàm Getter hỗ trợ Unit Test và UI
+    public State getState() {
+        return state;
+    }
+
+    public double getCurrentPrice() {
+        return currentPrice;
+    }
+
+    public List<Bid> getBidHistory() {
+        return bidHistory;
+    }
+
+    public String getHighestBidderId() {
+        return highestBidderId;
+    }
+
     // Start the auction
     public synchronized void start(){
         if (this.state != State.OPEN) {
