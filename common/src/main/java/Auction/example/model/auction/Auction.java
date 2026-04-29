@@ -12,6 +12,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import Auction.example.exception.InvalidBidException;
+import Auction.example.observer.AuctionObserver;
 import user.code.common.src.main.java.Auction.example.exception.CloseAuctionException;
 
 public class Auction {
@@ -74,7 +75,7 @@ public class Auction {
     }
 
     public synchronized void cancel(String reason){
-        if (this.state != State.CANCELED || this.state == State.PAID) {
+        if (this.state != State.CANCELED || this.state == State.FINISHED || this.state == State.PAID) {
             return;
         }
 
@@ -109,6 +110,22 @@ public class Auction {
         }
     }
 
+    private transient List<AuctionObserver> observers = new ArrayList<>();
+
+    // Hàm để người dùng tham gia vào xem
+    public void addObserver(AuctionObserver observer) {
+        if (!observers.contains(observer)) {
+            observers.add(observer);
+        }
+    }
+
+    // Hàm phát thông báo
+    private void notifyObservers(Bid newBid) {
+        for (AuctionObserver observer : observers) {
+            observer.updateNewBid(this.currentAuctionId, newBid);
+        }
+    }
+
     public synchronized void placeBid(String bidderId, double amount)
             throws InvalidBidException, CloseAuctionException {
         if (state != State.RUNNING) {
@@ -127,7 +144,7 @@ public class Auction {
         if (amount < currentPrice + minIncrementalPrice) {
             throw new InvalidBidException(
                     InvalidBidError.INVALID_INCREMENT,
-                    "Giá đặt phải cao hơn giá hiện tại cộng với bước giá tối thiểu (" + minIncrementalPrice + ")"
+                    "Bid amount must be higher than the current price plus the minimum increment (" + minIncrementalPrice + ")"
             );
         }
 
@@ -136,6 +153,11 @@ public class Auction {
 
         Bid bid = new Bid(currentAuctionId, bidderId, amount);
         bidHistory.add(bid);
+
+
+        // Ngay khi có người đặt giá thành công, báo cho tất cả mọi người biết
+        notifyObservers(bid);
+
     }
 
     public synchronized boolean processPayment(String winnerId, double amount) {
