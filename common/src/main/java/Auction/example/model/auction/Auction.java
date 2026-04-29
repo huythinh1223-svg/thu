@@ -1,9 +1,11 @@
 package Auction.example.model.auction;
 
+import Auction.example.enums.InvalidBidError;
 import Auction.example.model.item.items.Item;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -54,6 +56,8 @@ public class Auction {
         this.minIncrementalPrice = minIncrementalPrice;
         this.executor = Executors.newSingleThreadScheduledExecutor();
         this.duration = duration;
+
+        this.bidHistory = new ArrayList<>();
     }
 
     // Start the auction
@@ -75,6 +79,10 @@ public class Auction {
         }
 
         state = State.CANCELED;
+
+        if (future != null && !future.isDone()) {
+            future.cancel(false);
+        }
     }
 
     // Auto close the auction if khong ai bid them hoac het thoi gian
@@ -117,7 +125,10 @@ public class Auction {
         //}
 
         if (amount < currentPrice + minIncrementalPrice) {
-
+            throw new InvalidBidException(
+                    InvalidBidError.INVALID_INCREMENT,
+                    "Giá đặt phải cao hơn giá hiện tại cộng với bước giá tối thiểu (" + minIncrementalPrice + ")"
+            );
         }
 
         currentPrice = amount;
@@ -127,7 +138,7 @@ public class Auction {
         bidHistory.add(bid);
     }
 
-    public synchronized boolean processPayment(String WinnerId, double amount) {
+    public synchronized boolean processPayment(String winnerId, double amount) {
         if (!winnerId.equals(this.winnerId)) {
             return false;
         }
