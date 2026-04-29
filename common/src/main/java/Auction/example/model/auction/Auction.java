@@ -13,8 +13,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import Auction.example.exception.InvalidBidException;
 import Auction.example.observer.AuctionObserver;
-import user.code.common.src.main.java.Auction.example.exception.CloseAuctionException;
-
+import Auction.example.exception.AuctionClosedException;
 public class Auction {
 
     public enum State {
@@ -127,14 +126,14 @@ public class Auction {
     }
 
     public synchronized void placeBid(String bidderId, double amount)
-            throws InvalidBidException, CloseAuctionException {
+            throws InvalidBidException, AuctionClosedException {
         if (state != State.RUNNING) {
-            throw new CloseAuctionException("Auction is not running", currentAuctionId);
+            throw new AuctionClosedException("Auction is not running", currentAuctionId);
         }
 
         if (LocalDateTime.now().isAfter(endTime)) {
             finish();
-            throw new CloseAuctionException("Auction is already ended", currentAuctionId);
+            throw new AuctionClosedException("Auction is already ended", currentAuctionId);
         }
 
         //if (amount <= currentPrice) {
