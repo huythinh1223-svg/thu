@@ -1,8 +1,16 @@
-package Auction.example.observer;
+package user.code.common.src.main.java.Auction.example.observer;
 
 import Auction.example.model.auction.Bid;
 
 public interface AuctionObserver {
-    // Hàm này sẽ được gọi tự động khi có giá mới
-    void updateNewBid(String auctionId, Bid newBid);
+
+    void onBidPlaced(String auctionId, String bidderId, double amount);
+
+    void onAuctionStarted(String auctionId);
+
+    void onAuctionCanceled(String auctionId, String reason);
+
+    void onAuctionFinished(String auctionId, String winnerId, double finalPrice);
+
+
 }

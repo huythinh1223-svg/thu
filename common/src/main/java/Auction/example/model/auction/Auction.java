@@ -1,20 +1,25 @@
-package Auction.example.model.auction;
+package  user.code.common.src.main.java.Auction.example.model.auction;
 
 import Auction.example.enums.InvalidBidError;
 import Auction.example.model.item.items.Item;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import Auction.example.exception.InvalidBidException;
-import Auction.example.observer.AuctionObserver;
-import Auction.example.exception.AuctionClosedException;
-public class Auction {
+import java.util.concurrent.*;
+
+import user.code.common.src.main.java.Auction.example.exception.InvalidBidException;
+import user.code.common.src.main.java.Auction.example.exception.AuctionClosedException;
+import user.code.common.src.main.java.Auction.example.exception.AuctionException;
+import user.code.common.src.main.java.Auction.example.exception.InvalidBidException;
+import user.code.common.src.main.java.Auction.example.observer.AuctionObserver;
+import Auction.example.model.auction.Bid;
+import user.code.common.src.main.java.Auction.example.observer.AuctionObserver;
+
+public class Auction implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     public enum State {
         OPEN, // moi tao phien dau gia
@@ -43,6 +48,7 @@ public class Auction {
 
     private double minIncrementalPrice;
 
+    private transient List<AuctionObserver> observers;
     private transient ScheduledExecutorService executor;
     private transient ScheduledFuture<?> future; // nhiem vu tu dong close auction trong tuong lai
 
@@ -87,6 +93,7 @@ public class Auction {
         this.endTime = startTime.plusMinutes(duration);
 
          this.state = State.RUNNING;
+         StartAuctionNotifier();
          autoCloseAuction();
     }
 
@@ -100,6 +107,8 @@ public class Auction {
         if (future != null && !future.isDone()) {
             future.cancel(false);
         }
+
+        CancelAuctionNotifier(reason);
     }
 
     // Auto close the auction if khong ai bid them hoac het thoi gian
@@ -124,22 +133,8 @@ public class Auction {
         if (highestBidderId != null){
             winnerId = highestBidderId;
         }
-    }
 
-    private transient List<AuctionObserver> observers = new ArrayList<>();
-
-    // Hàm để người dùng tham gia vào xem
-    public void addObserver(AuctionObserver observer) {
-        if (!observers.contains(observer)) {
-            observers.add(observer);
-        }
-    }
-
-    // Hàm phát thông báo
-    private void notifyObservers(Bid newBid) {
-        for (AuctionObserver observer : observers) {
-            observer.updateNewBid(this.currentAuctionId, newBid);
-        }
+        FinishAuctionNotifier(winnerId, currentPrice);
     }
 
     public synchronized void placeBid(String bidderId, double amount)
@@ -153,15 +148,8 @@ public class Auction {
             throw new AuctionClosedException("Auction is already ended", currentAuctionId);
         }
 
-        //if (amount <= currentPrice) {
-            //throw new InvalidBidException("Bid must be higher than current price", currentPrice)
-        //}
-
         if (amount < currentPrice + minIncrementalPrice) {
-            throw new InvalidBidException(
-                    InvalidBidError.INVALID_INCREMENT,
-                    "Bid amount must be higher than the current price plus the minimum increment (" + minIncrementalPrice + ")"
-            );
+            throw new InvalidBidException("Your bid is too low", amount, currentPrice + minIncrementalPrice);
         }
 
         currentPrice = amount;
@@ -170,10 +158,7 @@ public class Auction {
         Bid bid = new Bid(currentAuctionId, bidderId, amount);
         bidHistory.add(bid);
 
-
-        // Ngay khi có người đặt giá thành công, báo cho tất cả mọi người biết
-        notifyObservers(bid);
-
+        BidPlacedNotifier(bidderId, amount);
     }
 
     public synchronized boolean processPayment(String winnerId, double amount) {
@@ -186,6 +171,55 @@ public class Auction {
             return true;
         }
         return false;
+    }
+
+    // Tao observer
+    public void addObserver(AuctionObserver observer) {
+        if (observers == null) {
+            observers = new CopyOnWriteArrayList<>();
+        }
+        if (!observers.contains(observer)) {
+            observers.add(observer);
+        }
+    }
+
+    public void  removeObserver(AuctionObserver observer) {
+        if (observers != null) {
+            observers.remove(observer);
+        }
+    }
+
+    public void BidPlacedNotifier(String bidderId, double amount) {
+        if (observers != null){
+            for (AuctionObserver observer : observers) {
+                observer.onBidPlaced(currentAuctionId, bidderId, amount);
+            }
+        }
+
+    }
+
+    public void StartAuctionNotifier() {
+        if (observers != null){
+            for (AuctionObserver observer : observers) {
+                observer.onAuctionStarted(currentAuctionId);
+            }
+        }
+    }
+
+    public void CancelAuctionNotifier(String reason) {
+        if (observers != null){
+            for (AuctionObserver observer : observers) {
+             observer.onAuctionCanceled(currentAuctionId, reason);
+            }
+        }
+    }
+
+    public void FinishAuctionNotifier(String WinnerId, double finalPrice) {
+        if (observers != null){
+            for (AuctionObserver observer : observers) {
+                observer.onAuctionFinished(currentAuctionId, WinnerId, finalPrice);
+            }
+        }
     }
 
 

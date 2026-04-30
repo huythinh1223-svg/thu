@@ -1,22 +1,21 @@
-package Auction.example.exception;
+package user.code.common.src.main.java.Auction.example.exception;
 
-import Auction.example.enums.InvalidBidError;
+public class InvalidBidException extends AuctionException {
 
-public class InvalidBidException extends Exception {
+    private double attemptedAmount;
+    private double currentPrice;
 
-    private final InvalidBidError errorCode;
-
-    public InvalidBidException(InvalidBidError errorCode) {
-        super(errorCode.getDescription());
-        this.errorCode = errorCode;
+    public InvalidBidException(String message, double attemptedAmount, double currentPrice) {
+        super(message, "INVALID_BID");
+        this.attemptedAmount = attemptedAmount;
+        this.currentPrice = currentPrice;
     }
 
-    public InvalidBidException(InvalidBidError errorCode, String additionalDetail) {
-        super(errorCode.getDescription() + " - " + additionalDetail);
-        this.errorCode = errorCode;
+    public double getAttemptedAmount() {
+        return attemptedAmount;
     }
 
-    public InvalidBidError getErrorCode() {
-        return errorCode;
+    public double getCurrentPrice() {
+        return currentPrice;
     }
 }
