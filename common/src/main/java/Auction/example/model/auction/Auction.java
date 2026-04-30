@@ -36,7 +36,7 @@ public class Auction implements Serializable {
     private String highestBidderId;
     private String winnerId;
 
-    private Item autionItem;
+    private Item auctionItem;
     private double startPrice;
     private double currentPrice;
 
@@ -47,6 +47,9 @@ public class Auction implements Serializable {
     private long duration; // tinh theo minutes
 
     private double minIncrementalPrice;
+
+    private static final ScheduledExecutorService SHARED_EXECUTOR =
+            Executors.newScheduledThreadPool(4);
 
     private transient List<AuctionObserver> observers;
     private transient ScheduledExecutorService executor;
@@ -60,27 +63,10 @@ public class Auction implements Serializable {
         this.startPrice = startPrice;
         this.currentPrice = startPrice;
         this.minIncrementalPrice = minIncrementalPrice;
-        this.executor = Executors.newSingleThreadScheduledExecutor();
+        this.executor = SHARED_EXECUTOR;
         this.duration = duration;
 
-        this.bidHistory = new ArrayList<>();
-    }
-
-    // Bổ sung các hàm Getter hỗ trợ Unit Test và UI
-    public State getState() {
-        return state;
-    }
-
-    public double getCurrentPrice() {
-        return currentPrice;
-    }
-
-    public List<Bid> getBidHistory() {
-        return bidHistory;
-    }
-
-    public String getHighestBidderId() {
-        return highestBidderId;
+        this.bidHistory = new CopyOnWriteArrayList<>();
     }
 
     // Start the auction
@@ -98,7 +84,7 @@ public class Auction implements Serializable {
     }
 
     public synchronized void cancel(String reason){
-        if (this.state != State.CANCELED || this.state == State.FINISHED || this.state == State.PAID) {
+        if (this.state == State.CANCELED || this.state == State.FINISHED || this.state == State.PAID) {
             return;
         }
 
@@ -107,6 +93,8 @@ public class Auction implements Serializable {
         if (future != null && !future.isDone()) {
             future.cancel(false);
         }
+
+        cleanup();
 
         CancelAuctionNotifier(reason);
     }
@@ -133,6 +121,8 @@ public class Auction implements Serializable {
         if (highestBidderId != null){
             winnerId = highestBidderId;
         }
+
+        cleanup();
 
         FinishAuctionNotifier(winnerId, currentPrice);
     }
@@ -162,6 +152,8 @@ public class Auction implements Serializable {
     }
 
     public synchronized boolean processPayment(String winnerId, double amount) {
+        if (state != State.FINISHED) return false;
+
         if (!winnerId.equals(this.winnerId)) {
             return false;
         }
@@ -183,44 +175,113 @@ public class Auction implements Serializable {
         }
     }
 
-    public void  removeObserver(AuctionObserver observer) {
+    public void removeObserver(AuctionObserver observer) {
         if (observers != null) {
             observers.remove(observer);
         }
     }
 
-    public void BidPlacedNotifier(String bidderId, double amount) {
-        if (observers != null){
-            for (AuctionObserver observer : observers) {
-                observer.onBidPlaced(currentAuctionId, bidderId, amount);
-            }
+    private void cleanup() {
+        if (future != null && !future.isDone()) {
+            future.cancel(false);
         }
 
+        if (observers != null) {
+            observers.clear();
+            observers = null;
+        }
+
+        future = null;
+    }
+
+    //wrap observer vao try catch de ko bi crash khi 1 cai bi loi
+    private void notifyObservers(java.util.function.Consumer<AuctionObserver> action) {
+        if (observers == null) return;
+
+        for (AuctionObserver observer : observers) {
+            try {
+                action.accept(observer);
+            } catch (Exception e) {
+                System.err.println("Observer error: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void BidPlacedNotifier(String bidderId, double amount) {
+        notifyObservers(o -> o.onBidPlaced(currentAuctionId, bidderId, amount));
     }
 
     public void StartAuctionNotifier() {
-        if (observers != null){
-            for (AuctionObserver observer : observers) {
-                observer.onAuctionStarted(currentAuctionId);
-            }
-        }
+        notifyObservers(o -> o.onAuctionStarted(currentAuctionId));
     }
 
     public void CancelAuctionNotifier(String reason) {
-        if (observers != null){
-            for (AuctionObserver observer : observers) {
-             observer.onAuctionCanceled(currentAuctionId, reason);
-            }
-        }
+        notifyObservers(o -> o.onAuctionCanceled(currentAuctionId, reason));
     }
 
-    public void FinishAuctionNotifier(String WinnerId, double finalPrice) {
-        if (observers != null){
-            for (AuctionObserver observer : observers) {
-                observer.onAuctionFinished(currentAuctionId, WinnerId, finalPrice);
-            }
-        }
+    public void FinishAuctionNotifier(String winnerId, double finalPrice) {
+        notifyObservers(o -> o.onAuctionFinished(currentAuctionId, winnerId, finalPrice));
     }
 
+    public State getState() {
+        return state;
+    }
 
+    public double getCurrentPrice() {
+        return currentPrice;
+    }
+
+    public List<Bid> getBidHistory() {
+        return new ArrayList<>(bidHistory);
+    }
+
+    public String getHighestBidderId() {
+        return highestBidderId;
+    }
+
+    public String getAuctionId() {
+        return currentAuctionId;
+    }
+
+    public String getSellerId() {
+        return sellerId;
+    }
+
+    public String getWinnerId() {
+        return winnerId;
+    }
+
+    public Item getAuctionItem() {
+        return auctionItem;
+    }
+
+    public double getStartPrice() {
+        return startPrice;
+    }
+
+    public double getMinIncrementalPrice() {
+        return minIncrementalPrice;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public long getRemainingTimeMillis() {
+        if (endTime == null) {
+            return duration * 60 * 1000;
+        }
+
+        long remaining = Duration.between(LocalDateTime.now(), endTime).toMillis();
+        return Math.max(0, remaining);
+    }
+
+    public long getDuration() {
+        return duration;
+    }
 }
