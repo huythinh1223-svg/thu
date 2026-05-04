@@ -167,7 +167,6 @@ class AuctionTest {
     }
 
     //test utility và getters
-
     @Test
     void testRemainingTime() {
         // Khi chưa start, trả về toàn bộ duration
