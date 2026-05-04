@@ -1,4 +1,4 @@
-package  user.code.common.src.main.java.Auction.example.model.auction;
+package Auction.example.model.auction;
 
 import Auction.example.enums.InvalidBidError;
 import Auction.example.model.item.items.Item;
@@ -10,13 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
-import user.code.common.src.main.java.Auction.example.exception.InvalidBidException;
-import user.code.common.src.main.java.Auction.example.exception.AuctionClosedException;
-import user.code.common.src.main.java.Auction.example.exception.AuctionException;
-import user.code.common.src.main.java.Auction.example.exception.InvalidBidException;
-import user.code.common.src.main.java.Auction.example.observer.AuctionObserver;
-import Auction.example.model.auction.Bid;
-import user.code.common.src.main.java.Auction.example.observer.AuctionObserver;
+import Auction.example.exception.InvalidBidException;
+import Auction.example.exception.AuctionClosedException;
+import Auction.example.exception.AuctionException;
+import Auction.example.observer.AuctionObserver;
 
 public class Auction implements Serializable {
     private static final long serialVersionUID = 1L;

@@ -1,4 +1,4 @@
-package user.code.common.src.main.java.Auction.example.observer;
+package Auction.example.observer;
 
 import Auction.example.model.auction.Bid;
 

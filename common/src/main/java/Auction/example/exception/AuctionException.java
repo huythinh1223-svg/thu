@@ -1,4 +1,4 @@
-package user.code.common.src.main.java.Auction.example.exception;
+package Auction.example.exception;
 
 public class AuctionException extends Exception {
     private String errorCode;
