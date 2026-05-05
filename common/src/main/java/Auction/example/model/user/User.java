@@ -1,5 +1,9 @@
 package Auction.example.model.user;
 
+import Auction.example.enums.UserRole;
+
+import javax.management.relation.Role;
+
 public abstract class User {
     private String id;
     private String username;
@@ -7,16 +11,11 @@ public abstract class User {
     private String fullname;
     private String email;
     private boolean isverify = false; // dùng để kiểm tra tính xác thực của tài khoản.
-// Định nghĩa hàm Role
-    private enum Role {
-        BIDDER,
-        SELLER,
-        ADMIN
-    }
-// tạo đối tượng role
-    public Role role;
 
-    public User ( String id, String username , String password, String fullname, String email, Role role) {
+// tạo đối tượng role
+    public UserRole role;
+
+    public User ( String id, String username , String password, String fullname, String email, UserRole role) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -73,12 +72,8 @@ public abstract class User {
     }
 
 // get, set Role
-    public Role getRole() {
+    public UserRole getRole() {
         return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
     }
 
 //get,set verify

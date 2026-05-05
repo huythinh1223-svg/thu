@@ -1,5 +1,7 @@
 package Auction.example.model.user;
 
+import Auction.example.enums.UserRole;
+import Auction.example.model.auction.Auction;
 import Auction.example.model.item.items.Item;
 
 import java.util.ArrayList;
@@ -9,7 +11,7 @@ public class Seller extends User {
     private List<Item> ownedItems;
 
     public Seller(String id, String username, String passworld, String fullname, String email) {
-        super(id, username, passworld, fullname, email, Role.SELLER);
+        super(id, username, passworld, fullname, email, UserRole.SELLER);
         ownedItems = new ArrayList<Item>();
     }
 
@@ -35,7 +37,7 @@ public class Seller extends User {
     public void manageAuction(Auction auction) {
 
         // kiểm tra xem người bán có đúng không kiểm tra thông qua ID
-        if (!auction.getSeller().getId().equals(this.getId())) {
+        if (!auction.getSellerId().equals(this.getId())) {
             System.out.println("Người bán " + this.getFullname() + " không phải người bán của phiên giao dịch này.");
             return;
         }
@@ -49,24 +51,30 @@ public class Seller extends User {
         System.out.printf("%-22s: %s%n", "Mã phiên", auction.getAuctionId());
 
         // Đi từ Auction -> Lấy đối tượng Item -> Lấy Tên Item
-        String itemName = auction.getItem().getItemName();
-
         //%-22s : từ phía bên trái bỏ ra ô phần trống gốm 22 ô để đền một chuỗi String
         // : dấu ':" xẽ xuất hiện ở ô trống thứ 23 để căn thẳng tất cả các phần
         // %s%n : %s phía bên phải bỏ ra số ô tùy ý để điền thông tin sản phẩm; %n xuống dòng sau khi hết.
-        System.out.printf("%-22s: %s%n", "Tên sản phẩm", auction.getItem().getItemName());
+        // Nếu Item bị null, báo lỗi thay vì để chương trình crash
+
+        if (auction.getAuctionItem() != null) {
+            System.out.printf("%-22s: %s%n", "Tên sản phẩm", auction.getAuctionItem().getName()); // Đã thêm ngoặc đóng
+        } else {
+            System.out.printf("%-22s: %s%n", "Tên sản phẩm", "[Chưa có thông tin sản phẩm]");
+        }
 
         // cập nhập trạng thái của sản phẩm này đã đấu giá thành công hay chưa đấu giá.
-        System.out.printf("%-22s: %s%n", "Trạng thái", auction.getStatus());
+        System.out.printf("%-22s: %s%n", "Trạng thái", auction.getState());
 
         // In ra giá cao nhất, định dạng %,.0f có dấu phẩy ngăn cách hàng nghìn
-        System.out.printf("%-22s: %,.0f VNĐ%n", "Giá cao nhất hiện tại", auction.getCurrentHighestBid());
+        System.out.printf("%-22s: %,.0f VNĐ%n", "Giá cao nhất hiện tại", auction.getCurrentPrice());
 
         System.out.println("=========================================");
 
 // nếu trạng thái giao dịch vẫn đang là sẵn sàng mà thời gian đã hết thì phải gọi hàm xử lí kết quả
-        if (auction.getStatus().equals("ACTIVE") && auction.isTimeUp()) {
-            auction.closeAuction();
+        // Đã đồng bộ logic kiểm tra trạng thái và thời gian với class Auction
+        if (auction.getState() == Auction.State.RUNNING && auction.getRemainingTimeMillis() <= 0) {
+            auction.finish(); // Đã đổi closeAuction() thành finish()
+            System.out.println("Phiên đấu giá đã kết thúc do hết thời gian.");
         }
     }
 

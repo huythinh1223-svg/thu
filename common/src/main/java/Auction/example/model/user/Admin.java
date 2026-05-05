@@ -1,9 +1,13 @@
-package user.code;
+package Auction.example.model.user;
+
+import Auction.example.enums.UserRole;
+import Auction.example.model.auction.Auction;
+
 public class Admin extends User {
     private int accessLevel1;
 
     public Admin(String id, String username, String passworld, String fullname, String email, int accessLevel1) {
-        super(id, username, passworld, fullname, email, Role.ADMIN);
+        super(id, username, passworld, fullname, email, UserRole.ADMIN);
         this.accessLevel1 = accessLevel1;
     }
 
@@ -41,9 +45,14 @@ public class Admin extends User {
     }
 
 // Xóa những phiên giao dịch không hợp lệ
-    public void removeInpropriateAuction (Auction  auction ) {
-        System.out.println("Sản phẩm: " + auction.getItem().getItemName() + " đã bị admin" + this.getFullname() + " xóa do không họp lệ");
-        auction.setStatus("CANCELED BY ADMIN");
+    public void removeInpropriateAuction (Auction auction, String reason ) {
+        // Kiểm tra an toàn cho Item để tránh NullPointerException
+        String itemName = "[Chưa có thông tin sản phẩm]";
+        if (auction.getAuctionItem() != null) {
+            itemName = auction.getAuctionItem().getName();
+        }
+        System.out.println("Sản phẩm: " + itemName + " đã bị admin" + this.getFullname() + " xóa do không họp lệ");
+        auction.cancel(reason);
     }
 
 // hiển thị thông tin của đối tượng admin

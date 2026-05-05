@@ -1,4 +1,6 @@
-package user.code.common.src.main.java.Auction.example.model.auction;
+package Auction.example.model.auction;
+
+import Auction.example.model.user.Bidder;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -54,19 +56,19 @@ public class AuctionManager {
 
     // --- Business logic ---
     public void placeBid(String auctionId, Bidder bidder, double amount) throws Exception {
-        getAuction(auctionId).placeBid(bidder, amount);
+        getAuction(auctionId).placeBid(bidder.getId(), amount);
     }
 
-    public void cancelAuction(String auctionId) throws Exception {
-        getAuction(auctionId).cancelAuction();
+    public void cancelAuction(String auctionId,String reason) throws Exception {
+        getAuction(auctionId).cancel(reason);
     }
 
-    public void markAuctionPaid(String auctionId) throws Exception {
-        getAuction(auctionId).markPaid();
+    public boolean processPayment(String auctionId, String winnerId, double amount) throws Exception {
+        return getAuction(auctionId).processPayment(winnerId, amount);
     }
 
     // Lấy tất cả auction theo trạng thái
-    public Collection<Auction> getAuctionsByState(AuctionState targetState) {
+    public Collection<Auction> getAuctionsByState(Auction.State targetState) {
         return auctions.values().stream()
                 .filter(a -> a.getState() == targetState)
                 .toList();

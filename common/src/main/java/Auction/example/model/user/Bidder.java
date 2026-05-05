@@ -1,5 +1,9 @@
 package Auction.example.model.user;
 
+import Auction.example.enums.UserRole;
+import Auction.example.model.auction.Auction;
+import Auction.example.model.auction.Bid;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +12,7 @@ public class Bidder  extends  User  {
     private List <Bid> bidHistory;
 
     public Bidder ( String id , String username , String passworld , String fullname , String email, double balance ){
-        super(id , username , passworld , fullname , email , Role.BIDDER );
+        super(id , username , passworld , fullname , email , UserRole.BIDDER );
         this.balance = balance;
         bidHistory = new ArrayList<Bid>();
     }
@@ -32,7 +36,7 @@ public class Bidder  extends  User  {
     }
 
 // tiến hành gia giá
-    public void placeBid (Auction aution, double price ) {
+    public void placeBid (Auction auction, double price ) {
         // số tiền đấu giá lớn hơn số dư của ví
         if ( price > balance ) {
             System.out.println("Lỗi: Số dư hiện tại không đủ");
@@ -40,7 +44,7 @@ public class Bidder  extends  User  {
         }
 
         // 2. Kiểm tra với giá hiện tại của phiên đấu giá
-        double currentPrice = auction.getCurrentHighestBid();
+        double currentPrice = auction.getCurrentPrice();
         if (price <= currentPrice) {
             System.out.println("Lỗi: Giá đặt (" + price + ") thấp hơn giá cao nhất hiện tại là (" + currentPrice + ").");
             return; // mếu sai thì dừng hàm
