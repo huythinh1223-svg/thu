@@ -91,9 +91,11 @@ public class Auction implements Serializable {
             future.cancel(false);
         }
 
-        cleanup();
+
 
         CancelAuctionNotifier(reason);
+
+        cleanup();
     }
 
     // Auto close the auction if khong ai bid them hoac het thoi gian
@@ -119,9 +121,11 @@ public class Auction implements Serializable {
             winnerId = highestBidderId;
         }
 
-        cleanup();
+
 
         FinishAuctionNotifier(winnerId, currentPrice);
+
+        cleanup();
     }
 
     public synchronized void placeBid(String bidderId, double amount)
